@@ -8,6 +8,9 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import worker.Master.WorkResult;
 
+/**
+ * @author xx
+ */
 public class WorkResultConsumer extends UntypedActor {
 
   private ActorRef mediator = DistributedPubSub.get(getContext().system()).mediator();
@@ -21,12 +24,10 @@ public class WorkResultConsumer extends UntypedActor {
   public void onReceive(Object message) {
     if (message instanceof DistributedPubSubMediator.SubscribeAck) {
       // do nothing
-    }
-    else if (message instanceof  WorkResult) {
+    } else if (message instanceof  WorkResult) {
       WorkResult workResult = (WorkResult) message;
       log.info("Consumed result: {}", workResult.result);
-    }
-    else {
+    } else {
       unhandled(message);
     }
   }

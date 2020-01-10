@@ -2,7 +2,10 @@ package worker;
 
 import java.io.Serializable;
 
-public abstract class MasterWorkerProtocol {
+/**
+ * @author xx
+ */
+public abstract class BaseMasterWorkerProtocol {
 
   // Messages from/to Workers
 
@@ -78,9 +81,9 @@ public abstract class MasterWorkerProtocol {
   // Messages to Workers
 
   public static final class WorkIsReady implements Serializable {
-    private static final WorkIsReady instance = new WorkIsReady();
+    private static final WorkIsReady INSTANCE = new WorkIsReady();
     public static WorkIsReady getInstance() {
-      return instance;
+      return INSTANCE;
     }
   }
 }

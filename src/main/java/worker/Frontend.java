@@ -16,14 +16,17 @@ import java.util.concurrent.TimeUnit;
 import static akka.pattern.Patterns.ask;
 import static akka.pattern.Patterns.pipe;
 
+/**
+ * @author xx
+ */
 public class Frontend extends UntypedActor {
 
 
   ActorRef masterProxy = getContext().actorOf(
-      ClusterSingletonProxy.props(
-          "/user/master",
-          ClusterSingletonProxySettings.create(getContext().system()).withRole("backend")),
-      "masterProxy");
+          ClusterSingletonProxy.props(
+                  "/user/master",
+                  ClusterSingletonProxySettings.create(getContext().system()).withRole("backend")),
+          "masterProxy");
 
   @Override
   public void onReceive(Object message) {
@@ -37,10 +40,11 @@ public class Frontend extends UntypedActor {
     Future<Object> res = f.map(new Mapper<Object, Object>() {
       @Override
       public Object apply(Object msg) {
-        if (msg instanceof Master.Ack)
+        if (msg instanceof Master.Ack) {
           return Ok.getInstance();
-        else
+        } else {
           return super.apply(msg);
+        }
       }
     }, ec).recover(new Recover<Object>() {
       @Override
@@ -55,10 +59,10 @@ public class Frontend extends UntypedActor {
   public static final class Ok implements Serializable {
     private Ok() {}
 
-    private static final Ok instance = new Ok();
+    private static final Ok INSTANCE = new Ok();
 
     public static Ok getInstance() {
-      return instance;
+      return INSTANCE;
     }
 
     @Override
@@ -70,10 +74,10 @@ public class Frontend extends UntypedActor {
   public static final class NotOk implements Serializable {
     private NotOk() {}
 
-    private static final NotOk instance = new NotOk();
+    private static final NotOk INSTANCE = new NotOk();
 
     public static NotOk getInstance() {
-      return instance;
+      return INSTANCE;
     }
 
     @Override

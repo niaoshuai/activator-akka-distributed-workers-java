@@ -1,16 +1,17 @@
 package worker;
 
+import worker.Master.Work;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-import worker.Master.Work;
-
-
+/**
+ * @author xx
+ */
 public final class WorkState {
 
   private final Map<String, Work> workInProgress;
@@ -44,67 +45,72 @@ public final class WorkState {
   }
 
   private WorkState(WorkState workState, WorkAccepted workAccepted) {
-    ConcurrentLinkedDeque<Work> tmp_pendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);
-    Set<String> tmp_acceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);
-    tmp_pendingWork.addLast(workAccepted.work);
-    tmp_acceptedWorkIds.add(workAccepted.work.workId);
-    workInProgress = new HashMap<String,Work>(workState.workInProgress);
-    acceptedWorkIds = tmp_acceptedWorkIds;
+    ConcurrentLinkedDeque<Work> tmpPendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);
+    Set<String> tmpAcceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);
+    tmpPendingWork.addLast(workAccepted.work);
+    tmpAcceptedWorkIds.add(workAccepted.work.workId);
+    workInProgress = new HashMap<String, Work>(workState.workInProgress);
+    acceptedWorkIds = tmpAcceptedWorkIds;
     doneWorkIds = new HashSet<String>(workState.doneWorkIds);
-    pendingWork = tmp_pendingWork;
+    pendingWork = tmpPendingWork;
 
 
   }
 
   public WorkState(WorkState workState, WorkStarted workStarted) {
-    ConcurrentLinkedDeque<Work> tmp_pendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);
-    Map<String, Work> tmp_workInProgress = new HashMap<String,Work>(workState.workInProgress);
+    ConcurrentLinkedDeque<Work> tmpPendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);
+    Map<String, Work> tmpWorkInProgress = new HashMap<String, Work>(workState.workInProgress);
 
-    Work work = tmp_pendingWork.removeFirst();
+    Work work = tmpPendingWork.removeFirst();
     if (!work.workId.equals(workStarted.workId)) {
-      throw new IllegalArgumentException("WorkStarted expected workId "+work.workId+"=="+workStarted.workId);
+      throw new IllegalArgumentException("WorkStarted expected workId " + work.workId + "==" + workStarted.workId);
     }
-    tmp_workInProgress.put(work.workId, work);
+    tmpWorkInProgress.put(work.workId, work);
 
-    workInProgress = tmp_workInProgress;
-    acceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);;
+    workInProgress = tmpWorkInProgress;
+    acceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);
+    ;
     doneWorkIds = new HashSet<String>(workState.doneWorkIds);
-    pendingWork = tmp_pendingWork;
+    pendingWork = tmpPendingWork;
   }
 
   public WorkState(WorkState workState, WorkCompleted workCompleted) {
-    Map<String, Work> tmp_workInProgress = new HashMap<String,Work>(workState.workInProgress);
-    Set<String> tmp_doneWorkIds = new HashSet<String>(workState.doneWorkIds);
-    tmp_workInProgress.remove(workCompleted.workId);
-    tmp_doneWorkIds.add(workCompleted.workId);
-    workInProgress = tmp_workInProgress;
-    acceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);;
-    doneWorkIds = tmp_doneWorkIds;
-    pendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);;
+    Map<String, Work> tmpWorkInProgress = new HashMap<String, Work>(workState.workInProgress);
+    Set<String> tmpDoneWorkIds = new HashSet<String>(workState.doneWorkIds);
+    tmpWorkInProgress.remove(workCompleted.workId);
+    tmpDoneWorkIds.add(workCompleted.workId);
+    workInProgress = tmpWorkInProgress;
+    acceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);
+    ;
+    doneWorkIds = tmpDoneWorkIds;
+    pendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);
+    ;
   }
 
 
   public WorkState(WorkState workState, WorkerFailed workerFailed) {
-    Map<String,Work> tmp_workInProgress = new HashMap<String,Work>(workState.workInProgress);
-    ConcurrentLinkedDeque<Work> tmp_pendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);
-    tmp_pendingWork.addLast(workState.workInProgress.get(workerFailed.workId));
-    tmp_workInProgress.remove(workerFailed.workId);
-    workInProgress = tmp_workInProgress;
-    acceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);;
+    Map<String, Work> tmpWorkInProgress = new HashMap<String, Work>(workState.workInProgress);
+    ConcurrentLinkedDeque<Work> tmpPendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);
+    tmpPendingWork.addLast(workState.workInProgress.get(workerFailed.workId));
+    tmpWorkInProgress.remove(workerFailed.workId);
+    workInProgress = tmpWorkInProgress;
+    acceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);
+    ;
     doneWorkIds = new HashSet<String>(workState.doneWorkIds);
-    pendingWork = tmp_pendingWork;
+    pendingWork = tmpPendingWork;
   }
 
 
   public WorkState(WorkState workState, WorkerTimedOut workerTimedOut) {
-    Map<String,Work> tmp_workInProgress = new HashMap<String,Work>(workState.workInProgress);
-    ConcurrentLinkedDeque<Work> tmp_pendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);
-    tmp_pendingWork.addLast(workState.workInProgress.get(workerTimedOut.workId));
-    tmp_workInProgress.remove(workerTimedOut.workId);
-    workInProgress = tmp_workInProgress;
-    acceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);;
+    Map<String, Work> tmpWorkInProgress = new HashMap<String, Work>(workState.workInProgress);
+    ConcurrentLinkedDeque<Work> tmpPendingWork = new ConcurrentLinkedDeque<Work>(workState.pendingWork);
+    tmpPendingWork.addLast(workState.workInProgress.get(workerTimedOut.workId));
+    tmpWorkInProgress.remove(workerTimedOut.workId);
+    workInProgress = tmpWorkInProgress;
+    acceptedWorkIds = new HashSet<String>(workState.acceptedWorkIds);
+    ;
     doneWorkIds = new HashSet<String>(workState.doneWorkIds);
-    pendingWork = tmp_pendingWork;
+    pendingWork = tmpPendingWork;
   }
 
 
@@ -117,6 +123,7 @@ public final class WorkState {
   }
 
 
+  @Override
   public String toString() {
     return ""+acceptedWorkIds.size();
   }

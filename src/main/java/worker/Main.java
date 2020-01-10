@@ -11,19 +11,24 @@ import akka.pattern.Patterns;
 import akka.persistence.journal.leveldb.SharedLeveldbJournal;
 import akka.persistence.journal.leveldb.SharedLeveldbStore;
 import akka.util.Timeout;
-
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-
 import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author xx
+ */
 public class Main {
+  private static int BACKEND_PORT_START = 2000;
+  private static int BACKEND_PORT_END = 2999;
+
+  private static int FRONT_PORT_START = 3000;
+  private static int FRONT_PORT_END = 3999;
+
   public static void main(String[] args) throws InterruptedException {
     if (args.length == 0) {
       startBackend(2551, "backend");
@@ -32,15 +37,15 @@ public class Main {
       startWorker(0);
       Thread.sleep(5000);
       startFrontend(0);
-    }
-    else {
+    } else {
       int port = Integer.parseInt(args[0]);
-      if (2000 <= port && port <= 2999)
+      if (BACKEND_PORT_START <= port && port <= BACKEND_PORT_END) {
         startBackend(port, "backend");
-      else if (3000 <= port && port <= 3999)
+      } else if (FRONT_PORT_START <= port && port <= FRONT_PORT_END) {
         startFrontend(port);
-      else
+      } else {
         startWorker(port);
+      }
     }
   }
 
@@ -48,38 +53,38 @@ public class Main {
 
   public static void startBackend(int port, String role) {
     Config conf = ConfigFactory.parseString("akka.cluster.roles=[" + role + "]").
-        withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port)).
-        withFallback(ConfigFactory.load());
+            withFallback(ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port)).
+            withFallback(ConfigFactory.load());
 
     ActorSystem system = ActorSystem.create("ClusterSystem", conf);
 
     startupSharedJournal(system, (port == 2551),
-        ActorPaths.fromString("akka.tcp://ClusterSystem@127.0.0.1:2551/user/store"));
+            ActorPaths.fromString("akka.tcp://ClusterSystem@127.0.0.1:2551/user/store"));
 
     system.actorOf(
-        ClusterSingletonManager.props(
-            Master.props(workTimeout),
-            PoisonPill.getInstance(),
-            ClusterSingletonManagerSettings.create(system).withRole(role)
-        ),
-        "master");
+            ClusterSingletonManager.props(
+                    Master.props(workTimeout),
+                    PoisonPill.getInstance(),
+                    ClusterSingletonManagerSettings.create(system).withRole(role)
+            ),
+            "master");
   }
 
   public static void startWorker(int port) {
     Config conf = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port).
-        withFallback(ConfigFactory.load("worker"));
+            withFallback(ConfigFactory.load("worker"));
 
     ActorSystem system = ActorSystem.create("WorkerSystem", conf);
 
     ActorRef clusterClient = system.actorOf(
-        ClusterClient.props(ClusterClientSettings.create(system)),
-        "clusterClient");
+            ClusterClient.props(ClusterClientSettings.create(system)),
+            "clusterClient");
     system.actorOf(Worker.props(clusterClient, Props.create(WorkExecutor.class)), "worker");
   }
 
   public static void startFrontend(int port) {
     Config conf = ConfigFactory.parseString("akka.remote.netty.tcp.port=" + port).
-        withFallback(ConfigFactory.load());
+            withFallback(ConfigFactory.load());
 
     ActorSystem system = ActorSystem.create("ClusterSystem", conf);
     ActorRef frontend = system.actorOf(Props.create(Frontend.class), "frontend");
@@ -115,6 +120,7 @@ public class Main {
       }}, system.dispatcher());
 
     f.onFailure(new OnFailure() {
+      @Override
       public void onFailure(Throwable ex) throws Throwable {
         system.log().error(ex, "Lookup of shared journal at {} timed out", path);
       }}, system.dispatcher());
