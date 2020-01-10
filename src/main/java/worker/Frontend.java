@@ -7,12 +7,12 @@ import akka.cluster.singleton.ClusterSingletonProxySettings;
 import akka.dispatch.Mapper;
 import akka.dispatch.Recover;
 import akka.util.Timeout;
+import scala.concurrent.ExecutionContext;
+import scala.concurrent.Future;
 
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
-import scala.concurrent.ExecutionContext;
-import scala.concurrent.Future;
 import static akka.pattern.Patterns.ask;
 import static akka.pattern.Patterns.pipe;
 
@@ -25,6 +25,7 @@ public class Frontend extends UntypedActor {
           ClusterSingletonProxySettings.create(getContext().system()).withRole("backend")),
       "masterProxy");
 
+  @Override
   public void onReceive(Object message) {
 
     Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
